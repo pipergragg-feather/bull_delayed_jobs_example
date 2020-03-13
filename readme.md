@@ -1,3 +1,9 @@
+## Bull Delayed Jobs Proof of Concept
+
+This project allows you to spin up multiple workers which can be seen on a taskforce dashboard. 
+
+### Getting started
+
 `make redis || true`
 
 `npm i`

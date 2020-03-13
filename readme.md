@@ -1,7 +1,10 @@
-make redis
+make redis || true 
+
+npm i
 
 tsc 
 
-npm run produce
+[in window 2] npm run process 
 
-npm run process 
+[in window 1] npm run produce
+

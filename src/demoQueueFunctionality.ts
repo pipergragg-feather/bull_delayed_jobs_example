@@ -32,7 +32,7 @@ if (!module.parent) {
     });
   }
   if (cluster.isWorker) {
-    for (var i = 0; i < 10; i++) {
+    for (var i = 0; i < 1000; i++) {
       new ShortRunningJob().schedule()
       new LongRunningJob().schedule()
     }

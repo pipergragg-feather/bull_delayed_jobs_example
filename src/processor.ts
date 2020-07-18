@@ -1,12 +1,14 @@
 import Queue from "bull";
-import cluster from "cluster";
+import SDC from 'statsd-client'
+
+const statsdClient = new SDC({host: 'localhost', port: 8125});
 
 // TODO 
 // Decorate classes 
 // Deployment
 // Monitoring 
 // Alerting 
-// Metrics (TICK stack?)
+// What metrics should we actually capture?
 // Handle timeouts 
 // Handle failures explicitly 
 
@@ -18,8 +20,16 @@ import cluster from "cluster";
 // useful redis-cli commands 
 // hgetall "bull:example-queue:47" 
 
-const numWorkers = 4;
+const numWorkers = 15;
 const queues = [new Queue("abcabc"), new Queue("abcabc")]
+
+const observe = async (id: string, promise: Promise<any>) => {
+  statsdClient.increment(id)
+  const startDate = new Date() 
+  await promise.then(() => {
+    statsdClient.timing(id, new Date().getMilliseconds() - startDate.getMilliseconds())
+  })
+}
 
 class AsyncQueue<T extends AsyncJob<any>> {
   // public priority = new Queue('priority')
@@ -42,9 +52,9 @@ abstract class AsyncJob<T extends object> {
 
   private async processOneJob(job: Queue.Job<this['props']>){
     console.log('processing one job')
-    // console.log(this)
     console.log({jobName: this.jobName, props: this.props, queue: this.queue.name})
-    return await this.execute(job)
+    
+    await observe(this.jobName, this.execute(job))
   }
   public abstract async execute(job: Queue.Job<T>): Promise<void>
 
@@ -55,7 +65,7 @@ class SmallUseCase {
     console.log("SmallUseCase: " + id)
     var start = new Date().getTime();
     var end = start;
-    const ms = 1000;
+    const ms = Math.random() * 3000;
     while (end < start + ms) {
       end = new Date().getTime();
     }

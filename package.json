@@ -5,8 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "produce": "node ./dist/producer.js",
-    "process": "node ./dist/processor.js"
+    "process": "node ./dist/demoQueueFunctionality.js"
   },
   "author": "",
   "license": "ISC",

@@ -10,9 +10,7 @@ This project allows you to spin up multiple workers which can be seen on a taskf
 
 `tsc`
 
-[in terminal window 1] `npm run process`
-
-[in terminal window 2] `npm run produce`
+`npm run process`
 
 Make an account at https://taskforce.sh/ 
 

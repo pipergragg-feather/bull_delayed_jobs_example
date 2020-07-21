@@ -1,3 +1,6 @@
+.PHONY: build
+
+
 taskforce:
 	 npx taskforce -n "transcoder connection" -t eb6d571c-1a0e-496f-9162-d0acfc170eb1
 redis:
@@ -18,5 +21,11 @@ monitoring:
 	-p 8125:8125/udp \
 	datadog/agent:latest 
 
-deploy:
+deploy_eb:
 	EB_APPLICATION_NAME=worker EB_ENVIRONMENT=worker-qa CIRCLE_BRANCH=feature/deploy CIRCLE_SHA1=$(shell git rev-parse HEAD) BRANCH=feature/deploy CIRCLE_TAG=qa bash build/deploy_to_elasticbeanstalk.sh .
+
+deploy_fargate:
+	$(MAKE) build && cd build/ecsConstruct && tsc && npm run cdk synthesize && cd ../..
+
+build:
+	docker build . -t pipergragg/worker

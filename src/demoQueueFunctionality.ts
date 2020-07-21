@@ -1,6 +1,6 @@
 import cluster from "cluster";
 import {ShortRunningJob, LongRunningJob, JobProcesser} from './processor'
-
+import {loadProcessEnvFromAWSSecrets} from './loadProcessEnvFromAWSSecrets'
 
 // TODO 
 // Decorate classes 
@@ -17,7 +17,7 @@ import {ShortRunningJob, LongRunningJob, JobProcesser} from './processor'
 // useful redis-cli commands 
 // hgetall "bull:example-queue:47" 
 
-if (!module.parent) {
+const beginProcess = () => {
   if (cluster.isMaster) {
     for (var i = 0; i < 2; i++) {
       new ShortRunningJob().schedule()
@@ -39,3 +39,10 @@ if (!module.parent) {
     new JobProcesser().process()
   }
 }
+
+if (!module.parent) {
+  loadProcessEnvFromAWSSecrets().then(() => {
+    beginProcess()
+  })
+}
+

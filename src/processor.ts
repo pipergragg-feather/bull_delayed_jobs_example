@@ -1,10 +1,7 @@
 import Queue from "bull";
-import SDC from 'statsd-client'
 import { Logging, DataDog } from './middleware';
 import { Config } from './config';
 
-
-const statsdClient = new SDC({host: 'localhost', port: 8125});
 
 // TODO 
 // https://docs.datadoghq.com/getting_started/tagging/unified_service_tagging/?tab=kubernetes
@@ -24,16 +21,13 @@ const statsdClient = new SDC({host: 'localhost', port: 8125});
 // useful redis-cli commands 
 // hgetall "bull:example-queue:47" 
 
-const redisHost = Config.get(Config.EnvVar.REDIS_HOST)
-const redisPort = Number(Config.get(Config.EnvVar.REDIS_PORT))
-const queueConfig = {redis: {port: redisPort, host: redisHost}}
-
-const queues = [new Queue("abcabc", queueConfig), new Queue("abcabc", queueConfig)]
-
 class AsyncQueue<T extends AsyncJob<any>> {
   // public priority = new Queue('priority')
-  public default = (job: T) => {
-    return new Queue(`default-${job.jobName}`)
+  public default = (name: string) => {
+    const redisHost = Config.get(Config.EnvVar.REDIS_HOST)
+    const redisPort = Number(Config.get(Config.EnvVar.REDIS_PORT))
+    const queueConfig = {redis: {port: redisPort, host: redisHost}}
+    return new Queue(`default-${name}`, queueConfig)
   }
 }
 
@@ -80,7 +74,7 @@ class SmallUseCase {
 export class ShortRunningJob extends AsyncJob<{myIdIs: string}> {
   public jobName = 'shortRunningJob'
   public props: {myIdIs: string}
-  public queue = new AsyncQueue().default(this)
+  public queue = new AsyncQueue().default(this.jobName)
 
   constructor(){
     super()
@@ -94,7 +88,7 @@ export class ShortRunningJob extends AsyncJob<{myIdIs: string}> {
 export class LongRunningJob extends AsyncJob<{myFavoritePizzaFlavor: string}> {
   public jobName = 'longRunningJob'
   public props: {myFavoritePizzaFlavor: string}
-  public queue = new AsyncQueue().default(this)
+  public queue = new AsyncQueue().default(this.jobName)
 
   constructor(){
     super()

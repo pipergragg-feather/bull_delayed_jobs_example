@@ -5,7 +5,8 @@
   "main": "dist/demoQueueFunctionality.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "npx tsc && node ./dist/demoQueueFunctionality.js"
+    "start": "build && node ./dist/demoQueueFunctionality.js",
+    "build": "tsc"
   },
   "author": "",
   "license": "ISC",

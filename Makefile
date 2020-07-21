@@ -17,3 +17,6 @@ monitoring:
 	-e DD_VERSION="7" \
 	-p 8125:8125/udp \
 	datadog/agent:latest 
+
+deploy:
+	EB_APPLICATION_NAME=worker EB_ENVIRONMENT=worker-qa CIRCLE_BRANCH=feature/deploy CIRCLE_SHA1=fakesha3 BRANCH=feature/deploy CIRCLE_TAG=qa bash build/deploy_to_elasticbeanstalk.sh .

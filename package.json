@@ -5,7 +5,7 @@
   "main": "dist/demoQueueFunctionality.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "NODE_ENV=development node ./dist/demoQueueFunctionality.js"
+    "start": "tsc && NODE_ENV=development node ./dist/demoQueueFunctionality.js"
   },
   "author": "",
   "license": "ISC",

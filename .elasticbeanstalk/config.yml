@@ -21,4 +21,4 @@ global:
   platform_version: null
   profile: eb-cli
   sc: git
-  workspace_type: Application
+  workspace_type: Worker

@@ -1,6 +1,7 @@
 import Queue from "bull";
 import SDC from 'statsd-client'
 import { Logging, DataDog } from './middleware';
+import { Config } from './config';
 
 
 const statsdClient = new SDC({host: 'localhost', port: 8125});
@@ -23,8 +24,11 @@ const statsdClient = new SDC({host: 'localhost', port: 8125});
 // useful redis-cli commands 
 // hgetall "bull:example-queue:47" 
 
-const numWorkers = 15;
-const queues = [new Queue("abcabc"), new Queue("abcabc")]
+const redisHost = Config.get(Config.EnvVar.REDIS_HOST)
+const redisPort = Number(Config.get(Config.EnvVar.REDIS_PORT))
+const queueConfig = {redis: {port: redisPort, host: redisHost}}
+
+const queues = [new Queue("abcabc", queueConfig), new Queue("abcabc", queueConfig)]
 
 class AsyncQueue<T extends AsyncJob<any>> {
   // public priority = new Queue('priority')

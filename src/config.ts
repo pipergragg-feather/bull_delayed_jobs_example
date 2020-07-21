@@ -2,18 +2,24 @@ abstract class ConfigVars {
   abstract get STATSD_HOST(): string;
   abstract get STATSD_PORT(): string;
 
+  abstract get REDIS_HOST(): string;
+  abstract get REDIS_PORT(): string;
 }
 
 class DevelopmentConfigVars extends ConfigVars {
   STATSD_HOST = '127.0.0.1';
   STATSD_PORT = '8125';
+  REDIS_HOST = '127.0.0.1';
+  REDIS_PORT = '6379';
 }
 class TestConfigVars extends DevelopmentConfigVars {
 }
 
 class QAConfigVars extends ConfigVars {
-  STATSD_HOST = '127.0.0.1';
+  STATSD_HOST = 'STATSD_HOST must be configured';
   STATSD_PORT = '8125';
+  REDIS_HOST = 'REDIS_HOST must be configured';
+  REDIS_PORT = '6379';
 }
 
 class ProductionConfigVars extends QAConfigVars {
@@ -30,7 +36,7 @@ class Config {
   }
 
   private static nodeEnv() {
-    return String(process.env.NODE_ENV).toLowerCase();
+    return String(process.env.NODE_ENV || 'development').toLowerCase();
   }
 
   private static envConfig() {
@@ -57,6 +63,8 @@ namespace Config {
   export enum EnvVar {
     STATSD_HOST = 'STATSD_HOST',
     STATSD_PORT = 'STATSD_PORT',
+    REDIS_HOST = 'REDIS_HOST',
+    REDIS_PORT = 'REDIS_PORT',
   }
   export enum Environment {
     production = 'production',

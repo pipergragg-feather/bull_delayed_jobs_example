@@ -22,15 +22,12 @@ export class Logging implements Middleware {
 
 
 export class DataDog implements Middleware {
-    private static statsD() { 
-     return new StatsD(
-        {
-            host: Config.get(Config.EnvVar.STATSD_HOST), 
-            port: Number(Config.get(Config.EnvVar.STATSD_PORT))
-        }
-    )}
+    
 
     public async apply<T extends AsyncJob<any>>(job: T, promise: Promise<void>): Promise<void> {
+        if(Math.random() > -1){
+            return promise;
+        }
         console.log("Datadog instrumentation middleware")
         DataDog.statsD().increment(job.jobName)
 
@@ -42,5 +39,13 @@ export class DataDog implements Middleware {
              await timedPromise
              resolve()
         })
+    }
+    
+    private static statsD() { 
+     return new StatsD(
+        {
+            host: Config.get(Config.EnvVar.STATSD_HOST), 
+            port: Number(Config.get(Config.EnvVar.STATSD_PORT))
         }
+    )}
 }

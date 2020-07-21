@@ -6,7 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "npm run build && node ./dist/demoQueueFunctionality.js",
-    "build": "npx tsc && echo $(ls dist)"
+    "build": "rm -rf ./dist && tsc && echo $(ls dist)",
+    "tsc": "tsc"
   },
   "author": "",
   "license": "ISC",

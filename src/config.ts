@@ -7,9 +7,9 @@ abstract class ConfigVars {
 }
 
 class DevelopmentConfigVars extends ConfigVars {
-  STATSD_HOST = '127.0.0.1';
+  STATSD_HOST = 'STATSD_HOST must be configured';
   STATSD_PORT = '8125';
-  REDIS_HOST = '127.0.0.1';
+  REDIS_HOST = 'REDIS_HOST must be configured';
   REDIS_PORT = '6379';
 }
 class TestConfigVars extends DevelopmentConfigVars {
@@ -49,8 +49,9 @@ class Config {
 
   static get = (variable: Config.EnvVar) => {
     const config = Config.envConfig();
+    console.log({variable})
     const configValue = process.env[variable] || config[variable];
-
+    console.log({configValue})
     if (typeof configValue !== 'string') {
       throw new Error(`Missing environment variable: ${variable}`);
     }

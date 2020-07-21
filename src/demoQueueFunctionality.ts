@@ -19,6 +19,10 @@ import {ShortRunningJob, LongRunningJob, JobProcesser} from './processor'
 
 if (!module.parent) {
   if (cluster.isMaster) {
+    for (var i = 0; i < 2; i++) {
+      new ShortRunningJob().schedule()
+      new LongRunningJob().schedule()
+    }
     for (var i = 0; i < 4; i++) {
       cluster.fork();
     }
@@ -32,10 +36,6 @@ if (!module.parent) {
     });
   }
   if (cluster.isWorker) {
-    for (var i = 0; i < 1000; i++) {
-      new ShortRunningJob().schedule()
-      new LongRunningJob().schedule()
-    }
     new JobProcesser().process()
   }
 }

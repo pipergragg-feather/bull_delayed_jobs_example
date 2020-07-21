@@ -4,6 +4,11 @@
 import AWS from 'aws-sdk'
 
 export const loadProcessEnvFromAWSSecrets = async () => {
+    if(process.env.NODE_ENV === 'development'){
+        console.log("Skipping environment variable set - environment is development")
+        return 
+    }
+
     // Create a Secrets Manager client
     var client = new AWS.SecretsManager({
         region: 'us-west-1',

@@ -24,8 +24,19 @@ monitoring:
 deploy_eb:
 	EB_APPLICATION_NAME=worker EB_ENVIRONMENT=worker-qa CIRCLE_BRANCH=feature/deploy CIRCLE_SHA1=$(shell git rev-parse HEAD) BRANCH=feature/deploy CIRCLE_TAG=qa bash build/deploy_to_elasticbeanstalk.sh .
 
+# Deploy infra stack
+# Push image to ECR 
+# Deploy ECR stack 
+# (Might wanna check this is what infra-rfc does)
 deploy_fargate:
-	$(MAKE) build && cd build/ecsConstruct && tsc && npm run cdk synthesize && cd ../..
+	$(MAKE) push_ecr && cd build/ecsConstruct && npm run cdk deploy \
+	&& cd ../..
 
+# Find accountId using $aws sts get-caller-identity 
+push_ecr:
+	$(MAKE) build && $(MAKE) login && docker tag pipergragg/worker 981204492539.dkr.ecr.us-west-1.amazonaws.com/worker-repo-qa && docker push 981204492539.dkr.ecr.us-west-1.amazonaws.com/worker-repo-qa
+
+login: 
+	aws ecr get-login-password --region us-west-1 | docker login --username AWS --password-stdin 981204492539.dkr.ecr.us-west-1.amazonaws.com
 build:
 	docker build . -t pipergragg/worker

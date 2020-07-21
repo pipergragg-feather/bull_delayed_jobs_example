@@ -49,9 +49,7 @@ class Config {
 
   static get = (variable: Config.EnvVar) => {
     const config = Config.envConfig();
-    console.log({variable})
     const configValue = process.env[variable] || config[variable];
-    console.log({configValue})
     if (typeof configValue !== 'string') {
       throw new Error(`Missing environment variable: ${variable}`);
     }

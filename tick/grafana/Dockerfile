@@ -1,9 +1,0 @@
-FROM grafana/grafana
-
-ENV GF_INSTALL_PLUGINS grafana-clock-panel,grafana-simple-json-datasource
-ENV GF_AUTH_BASIC_ENABLED false
-ENV GF_AUTH_DISABLE_LOGIN_FORM true
-ENV GF_AUTH_ANONYMOUS_ENABLED true
-ENV GF_AUTH_ANONYMOUS_ORG_ROLE Admin
-
-EXPOSE 3000

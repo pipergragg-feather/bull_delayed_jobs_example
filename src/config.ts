@@ -1,0 +1,69 @@
+abstract class ConfigVars {
+  abstract get STATSD_HOST(): string;
+  abstract get STATSD_PORT(): string;
+
+}
+
+class DevelopmentConfigVars extends ConfigVars {
+  STATSD_HOST = '127.0.0.1';
+  STATSD_PORT = '8125';
+}
+class TestConfigVars extends DevelopmentConfigVars {
+}
+
+class QAConfigVars extends ConfigVars {
+  STATSD_HOST = '127.0.0.1';
+  STATSD_PORT = '8125';
+}
+
+class ProductionConfigVars extends QAConfigVars {
+}
+
+class Config {
+  private static environments(): Map<Config.Environment, ConfigVars> {
+    return new Map([
+      [Config.Environment.production, new ProductionConfigVars()],
+      [Config.Environment.qa, new QAConfigVars()],
+      [Config.Environment.development, new DevelopmentConfigVars()],
+      [Config.Environment.test, new TestConfigVars()],
+    ]);
+  }
+
+  private static nodeEnv() {
+    return String(process.env.NODE_ENV).toLowerCase();
+  }
+
+  private static envConfig() {
+    const configForCurrentEnv = this.environments().get(this.nodeEnv() as Config.Environment);
+    if (!configForCurrentEnv) {
+      throw new Error(`Could not find worker config for environment: ${this.nodeEnv()}`);
+    }
+    return configForCurrentEnv;
+  }
+
+  static get = (variable: Config.EnvVar) => {
+    const config = Config.envConfig();
+    const configValue = process.env[variable] || config[variable];
+
+    if (typeof configValue !== 'string') {
+      throw new Error(`Missing environment variable: ${variable}`);
+    }
+
+    return configValue;
+  };
+}
+
+namespace Config {
+  export enum EnvVar {
+    STATSD_HOST = 'STATSD_HOST',
+    STATSD_PORT = 'STATSD_PORT',
+  }
+  export enum Environment {
+    production = 'production',
+    qa = 'qa',
+    development = 'development',
+    test = 'test',
+  }
+}
+
+export { Config };

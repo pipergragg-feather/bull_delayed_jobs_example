@@ -1,16 +1,19 @@
 import Queue from "bull";
 import SDC from 'statsd-client'
+import { Logging, DataDog } from './middleware';
+
 
 const statsdClient = new SDC({host: 'localhost', port: 8125});
 
 // TODO 
-// Decorate classes 
+// https://docs.datadoghq.com/getting_started/tagging/unified_service_tagging/?tab=kubernetes
 // Deployment
-// Monitoring 
 // Alerting 
-// What metrics should we actually capture?
 // Handle timeouts 
 // Handle failures explicitly 
+// Decorate classes 
+// What metrics should we actually capture?
+// Monitoring 
 
 // This module is intended to allow external-api and internal-api to: 
 // 1.) Schedule future operations (e.g. bill a customer once in the future)
@@ -23,14 +26,6 @@ const statsdClient = new SDC({host: 'localhost', port: 8125});
 const numWorkers = 15;
 const queues = [new Queue("abcabc"), new Queue("abcabc")]
 
-const observe = async (id: string, promise: Promise<any>) => {
-  statsdClient.increment(id)
-  const startDate = new Date() 
-  await promise.then(() => {
-    statsdClient.timing(id, new Date().getMilliseconds() - startDate.getMilliseconds())
-  })
-}
-
 class AsyncQueue<T extends AsyncJob<any>> {
   // public priority = new Queue('priority')
   public default = (job: T) => {
@@ -38,7 +33,7 @@ class AsyncQueue<T extends AsyncJob<any>> {
   }
 }
 
-abstract class AsyncJob<T extends object> {
+export abstract class AsyncJob<T extends object> {
   public abstract jobName: string 
   public abstract props: T 
   public abstract queue: Queue.Queue
@@ -46,17 +41,21 @@ abstract class AsyncJob<T extends object> {
   public async schedule(){
     await this.queue.add(this.jobName, this.props)
   }
-  public async process(){
+  public async beginProcessingFromQueue(){
     await this.queue.process(this.jobName, this.processOneJob.bind(this))
   }
 
-  private async processOneJob(job: Queue.Job<this['props']>){
+  private async processOneJob(bullQueueJob: Queue.Job<this['props']>){
     console.log('processing one job')
     console.log({jobName: this.jobName, props: this.props, queue: this.queue.name})
-    
-    await observe(this.jobName, this.execute(job))
+
+    let promise = this.execute(bullQueueJob.data)
+    for(const middleware of [new Logging(),  new DataDog()]){
+      promise = middleware.apply(this, promise)
+    }
+    await promise 
   }
-  public abstract async execute(job: Queue.Job<T>): Promise<void>
+  public abstract async execute(props: T): Promise<void>
 
 }
 
@@ -84,8 +83,8 @@ export class ShortRunningJob extends AsyncJob<{myIdIs: string}> {
     this.props = {myIdIs: Math.random().toString()}
   }
 
-  async execute(job: Queue.Job<this['props']>){    
-    await SmallUseCase.execute({id: job.data.myIdIs})
+  async execute(payload: this['props']){    
+    await SmallUseCase.execute({id: payload.myIdIs})
   }
 }
 export class LongRunningJob extends AsyncJob<{myFavoritePizzaFlavor: string}> {
@@ -99,15 +98,15 @@ export class LongRunningJob extends AsyncJob<{myFavoritePizzaFlavor: string}> {
     this.props = {myFavoritePizzaFlavor: ['pineapple', 'pepperoni'][randNumber]}
   }
 
-  async execute(job: Queue.Job<this['props']>){
-    await SmallUseCase.execute({id: job.data.myFavoritePizzaFlavor})
+  async execute(payload: this['props']){
+    await SmallUseCase.execute({id: payload.myFavoritePizzaFlavor})
   }
 }
 
 export class JobProcesser {
   async process(){
     for(const job of [new ShortRunningJob(), new LongRunningJob()]){
-      job.process()
+      job.beginProcessingFromQueue()
     }
   }
 }

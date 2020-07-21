@@ -1,6 +1,6 @@
 import cluster from "cluster";
-import Queue from 'bull'
 import {ShortRunningJob, LongRunningJob, JobProcesser} from './processor'
+
 
 // TODO 
 // Decorate classes 

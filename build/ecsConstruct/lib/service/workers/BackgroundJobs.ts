@@ -1,72 +1,81 @@
 import * as cdk from '@aws-cdk/core';
-import * as ec2 from "@aws-cdk/aws-ec2";
 import * as ecs from "@aws-cdk/aws-ecs";
-import * as ecr from "@aws-cdk/aws-ecr";
 import * as secrets from "@aws-cdk/aws-secretsmanager"
 
-// import * as elasticache from "@aws-cdk/aws-elasticache"
+import {BackgroundJobsEnvironment} from './BackgroundJobsEnvironment'
+import {Variables} from '../../util/Variables' 
 import { FargateTaskDefinition } from '@aws-cdk/aws-ecs';
 import { ServiceStackInputProps } from '../../util/ServiceStack';
-import { InfraStack } from '../../core/InfraStack';
-// import { Construct } from '@aws-cdk/core';
+import { DatadogEnvironment } from './DatadogEnvironment';
 
 const deployEnv = process.env.DEPLOY_ENV || "QA";
 
-export type BackgroundJobServiceInputProps = ServiceStackInputProps & InfraStack
+export type BackgroundJobsInputProps = ServiceStackInputProps
 
 export class BackgroundJobs extends cdk.Stack {
-  constructor(scope: cdk.Construct, id: string, props: BackgroundJobServiceInputProps) {
+  constructor(scope: cdk.Construct, id: string, props: BackgroundJobsInputProps) {
     super(scope, id, props);
 
-     const vpc = new ec2.Vpc(this, `WorkerVPC-${deployEnv}`, {
-      maxAzs: 2 // Default is all AZs in region
-    });
-
-    const cluster = new ecs.Cluster(this, `WorkerCluster-${deployEnv}`, {
-      vpc: vpc
-    });
-
-    const apiRepository = new ecr.Repository(this, `WorkerRepository-${deployEnv}`, {repositoryName:  `worker-repo-${deployEnv.toLowerCase()}`})
-
-    new secrets.Secret(this, `WorkerEnvSecrets-${deployEnv}`)
+    new secrets.Secret(this, Variables.withSuffix("WorkerEnvSecrets"))
 
     // Datadog 
     // Load multiple containers into a task 
       // Main container
       // Sidecar container containing datadog 
     
-    // Create a load-balanced Fargate service and make it public
-    
-    // const cw = new cloudwatch.Dashboard(, `WorkerDashboard-${deployEnv}`, {widgets: []})
-
-    // Environment variables for this stack
-    // const env: ApiStackEnvironment = new ApiStackEnvironment(this);
-
     // ECS Task
-    const taskDefinition = new FargateTaskDefinition(this, "task-api", {
-      cpu: 512,
+    const taskDefinition = new FargateTaskDefinition(this, Variables.withSuffix("worker-task"), {
+      cpu: 1024,
       memoryLimitMiB: 2048,
     });
-    taskDefinition.addContainer(`worker-${deployEnv}`, {
+
+    // Environment variables for this stack
+    const datadogEnv = new DatadogEnvironment(
+      this
+    );
+    
+    const datadog = taskDefinition.addContainer(Variables.withSuffix('datadog'), {
+      cpu: 512,
+      environment: datadogEnv.getEnvironment(props),
+      essential: true,
+      image: ecs.ContainerImage.fromRegistry("datadog/agent:latest"),
+      logging: new ecs.AwsLogDriver({ streamPrefix: Variables.withSuffix("ecs") }),
+      memoryLimitMiB: 1024,
+      secrets: datadogEnv.getSecrets(props),
+    });
+
+    datadog.addPortMappings({containerPort: 8126, protocol: ecs.Protocol.TCP})
+    datadog.addPortMappings({containerPort: 8125, protocol: ecs.Protocol.TCP})
+
+    // Environment variables for this stack
+    const env = new BackgroundJobsEnvironment(
+      this
+    );
+
+    taskDefinition.addContainer(Variables.withSuffix('worker'), {
       cpu: 512,
       // environment: env.getEnvironment(props),
       essential: true,
-      image: ecs.ContainerImage.fromEcrRepository(apiRepository), // props.RepositoryStack.api
-      logging: new ecs.AwsLogDriver({ streamPrefix: "ecs" }),
+      image: ecs.ContainerImage.fromEcrRepository(props.InfraStack.repository),
+      logging: new ecs.AwsLogDriver({ streamPrefix: Variables.withSuffix("ecs") }),
       memoryLimitMiB: 2048,
       // secrets: env.getSecrets(props),
     });
-    taskDefinition.defaultContainer?.addPortMappings({ containerPort: 5000 });
+
+
+    // taskDefinition.defaultContainer?.addLink(datadog)
 
     // ECS Service
-    const service = new ecs.FargateService(this, "service-api", {
-      cluster: cluster,
+    new ecs.FargateService(this, Variables.withSuffix("service-worker"), {
+      cluster: props.InfraStack.cluster,
       desiredCount: 2,
       securityGroup: props.InfraStack.apiSecurityGroup,
       taskDefinition,
-      vpcSubnets: { subnets: props.InfraStack.vpc.privateSubnets }, //  
+      vpcSubnets: { subnets: props.InfraStack.vpc.privateSubnets }, 
     });
+    
 
+    // const namespace = new serviceDiscovery.PrivateDnsNamespace(taskDefinition, 'service-namespace', {vpc: props.InfraStack.vpc, name: Variables.withSuffix('worker')})
 
 
     // Outputs

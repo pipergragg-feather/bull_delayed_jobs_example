@@ -1,15 +1,12 @@
 {
-  "name": "ecs_construct",
+  "name": "feather_worker",
   "version": "0.1.0",
   "bin": {
-    "ecs_construct": "bin/ecs_construct.js"
+    "feather": "bin/feather.js"
   },
   "scripts": {
-    "build": "tsc",
-    "watch": "tsc -w",
-    "test": "jest",
     "cdk": "cdk",
-    "deploy": "tsc && cdk deploy"
+    "deploy": "cdk deploy"
   },
   "devDependencies": {
     "@aws-cdk/assert": "1.53.0",

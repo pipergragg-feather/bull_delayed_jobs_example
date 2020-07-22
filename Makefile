@@ -1,5 +1,8 @@
 .PHONY: build
 
+aws_account_id=981204492539
+aws_region=us-west-1
+environment=qa 
 
 taskforce:
 	 npx taskforce -n "transcoder connection" -t eb6d571c-1a0e-496f-9162-d0acfc170eb1
@@ -22,7 +25,7 @@ monitoring:
 	datadog/agent:latest 
 
 deploy_eb:
-	EB_APPLICATION_NAME=worker EB_ENVIRONMENT=worker-qa CIRCLE_BRANCH=feature/deploy CIRCLE_SHA1=$(shell git rev-parse HEAD) BRANCH=feature/deploy CIRCLE_TAG=qa bash build/deploy_to_elasticbeanstalk.sh .
+	EB_APPLICATION_NAME=worker EB_ENVIRONMENT=worker-$(environment) CIRCLE_BRANCH=feature/deploy CIRCLE_SHA1=$(shell git rev-parse HEAD) BRANCH=feature/deploy CIRCLE_TAG=$(environment) bash build/deploy_to_elasticbeanstalk.sh .
 
 # Later, could change the order of events to 
 # 1 Deploy infra stack
@@ -35,9 +38,10 @@ deploy_fargate:
 
 # Find accountId using $aws sts get-caller-identity 
 push_ecr:
-	$(MAKE) build && $(MAKE) login && docker tag worker_dev 981204492539.dkr.ecr.us-west-1.amazonaws.com/worker-repo-qa && docker push 981204492539.dkr.ecr.us-west-1.amazonaws.com/worker-repo-qa
+	$(MAKE) build && $(MAKE) login && docker tag worker_$(environment) $(aws_account_id).dkr.ecr.$(aws_region).amazonaws.com/worker-repo-$(environment) && docker push $(aws_account_id).dkr.ecr.$(aws_region).amazonaws.com/worker-repo-$(environment)
 
 login: 
-	aws ecr get-login-password --region us-west-1 | docker login --username AWS --password-stdin 981204492539.dkr.ecr.us-west-1.amazonaws.com
+	aws ecr get-login-password --region $(aws_region) | docker login --username AWS --password-stdin 981204492539.dkr.ecr.$(aws_region).amazonaws.com
+
 build:
-	docker build . -t worker_dev
+	docker build . -t worker_$(environment)

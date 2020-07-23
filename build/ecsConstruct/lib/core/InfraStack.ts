@@ -4,7 +4,7 @@ import {
   IVpc,
   Port,
   SecurityGroup,
-  Vpc,
+  Vpc
 } from "@aws-cdk/aws-ec2";
 import * as ecs from "@aws-cdk/aws-ecs";
 import * as rds from "@aws-cdk/aws-rds";
@@ -17,18 +17,19 @@ import { Variables } from '../util/Variables';
 
 // Define the props this stack exports to other stacks
 export interface IInfraStackProps extends StackProps {
-  [key: string]: any;
   InfraStack: {
     apiALBSecurityGroup: ISecurityGroup;
     apiSecurityGroup: ISecurityGroup;
     esSecurityGroup: ISecurityGroup;
     cluster: ecs.ICluster;
-    repository: ecr.Repository;
+    repository: ecr.IRepository;
     database: rds.IDatabaseInstance;
     rdsSecurityGroup: ISecurityGroup;
     vpc: ec2.Vpc;
     vpcSecurityGroup: ISecurityGroup;
+    vpcSecurityGroupName: string;
   };
+
 }
 
 @exportsProps()
@@ -43,7 +44,7 @@ export class InfraStack extends StackBase {
   public readonly cluster: ecs.Cluster;
 
   @prop
-  public readonly repository: ecr.Repository;
+  public readonly repository: ecr.IRepository;
 
   @prop
   public readonly esSecurityGroup: ISecurityGroup;
@@ -57,19 +58,44 @@ export class InfraStack extends StackBase {
   @prop
   public readonly vpcSecurityGroup: ISecurityGroup;
 
+  @prop 
+  public readonly vpcSecurityGroupName: string;
+
+
   constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
     // The VPC into which all resources will be deployed
     this.vpc = new Vpc(this, Variables.withSuffix("feather-vpc"), {
-      cidr: "10.0.0.0/16",
+      cidr: ec2.Vpc.DEFAULT_CIDR_RANGE,
       maxAzs: 2,
+      natGateways: 1,
+      subnetConfiguration: [
+        {
+        cidrMask: 24,
+        name: 'ingress',
+        subnetType: ec2.SubnetType.PUBLIC,
+      },
+      {
+        cidrMask: 19,
+        name: 'private',
+        subnetType: ec2.SubnetType.PRIVATE,
+      },
+      {
+        cidrMask: 28,
+        name: 'rds',
+        subnetType: ec2.SubnetType.ISOLATED,
+      }
+      ]
     });
 
+    // https://github.com/Netflix/asgard/issues/336
+    this.vpcSecurityGroupName = Variables.withSuffix("feather-sg-vpc")
     // Security group granting access between VPC resources
     this.vpcSecurityGroup = new SecurityGroup(this, Variables.withSuffix("feather-sg-vpc"), {
       allowAllOutbound: true,
       vpc: this.vpc,
+      securityGroupName: this.vpcSecurityGroupName
     });
 
     this.vpcSecurityGroup.addIngressRule(
@@ -97,7 +123,14 @@ export class InfraStack extends StackBase {
       instanceType: new ec2.InstanceType("t2.medium"),
       desiredCapacity: 2
     })
+    
+  
+    // this.repository =  new ecr.Repository(this, Variables.withSuffix("WorkerRepository"), {repositoryName:  Variables.withSuffix("worker-repo")})
 
-    this.repository =  new ecr.Repository(this, Variables.withSuffix("WorkerRepository"), {repositoryName:  Variables.withSuffix("worker-repo")})
+    this.repository = ecr.Repository.fromRepositoryName(
+      this,
+      Variables.withSuffix("WorkerRepository"),
+      Variables.withSuffix("worker-repo")
+    );
   }
 }

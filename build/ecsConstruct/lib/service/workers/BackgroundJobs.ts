@@ -7,20 +7,15 @@ import {Variables} from '../../util/Variables'
 import { FargateTaskDefinition } from '@aws-cdk/aws-ecs';
 import { ServiceStackInputProps } from '../../util/ServiceStack';
 import { DatadogEnvironment } from './DatadogEnvironment';
+import { StackBase } from '../../util/StackBase';
 
 export type BackgroundJobsInputProps = ServiceStackInputProps
+export class BackgroundJobs extends StackBase {
+  // readonly secret: secrets.Secret
 
-export class BackgroundJobs extends cdk.Stack {
   constructor(scope: cdk.Construct, id: string, props: BackgroundJobsInputProps) {
     super(scope, id, props);
 
-    new secrets.Secret(this, Variables.withSuffix("WorkerEnvSecrets"))
-
-    // Datadog 
-    // Load multiple containers into a task 
-      // Main container
-      // Sidecar container containing datadog 
-    
     // ECS Task
     const taskDefinition = new FargateTaskDefinition(this, Variables.withSuffix("worker-task"), {
       cpu: 1024,
@@ -50,9 +45,12 @@ export class BackgroundJobs extends cdk.Stack {
       this
     );
 
+    const secretId = Variables.withSuffix("WorkerEnvSecrets")
+    new secrets.Secret(this, secretId)
+
     taskDefinition.addContainer(Variables.withSuffix('worker'), {
       cpu: 512,
-      // environment: env.getEnvironment(props),
+      environment: Object.assign(env.getEnvironment(props), {SECRET_ID: secretId}),
       essential: true,
       image: ecs.ContainerImage.fromEcrRepository(props.InfraStack.repository),
       logging: new ecs.AwsLogDriver({ streamPrefix: Variables.withSuffix("ecs") }),

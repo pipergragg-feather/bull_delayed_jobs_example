@@ -32,18 +32,20 @@ deploy_eb:
 # 3 Deploy ECR stack 
 deploy_fargate:
 	cd build/ecsConstruct && \
+	tsc && \
 	npm run cdk deploy infra && \
+	npm run cdk deploy persistence && \
 	cd ../.. &&\
 	$(MAKE) push_ecr && \
 	cd build/ecsConstruct && \
-	npm run cdk deploy worker-qa
+	npm run cdk deploy worker
 
 # Find accountId using $aws sts get-caller-identity 
 push_ecr:
 	$(MAKE) build && $(MAKE) login && docker tag worker_$(environment) $(aws_account_id).dkr.ecr.$(aws_region).amazonaws.com/worker-repo-$(environment) && docker push $(aws_account_id).dkr.ecr.$(aws_region).amazonaws.com/worker-repo-$(environment)
 
 login: 
-	aws ecr get-login-password --region $(aws_region) | docker login --username AWS --password-stdin 981204492539.dkr.ecr.$(aws_region).amazonaws.com
+	aws ecr get-login-password --region $(aws_region) | docker login --username AWS --password-stdin $(aws_account_id).dkr.ecr.$(aws_region).amazonaws.com
 
 build:
 	docker build . -t worker_$(environment)

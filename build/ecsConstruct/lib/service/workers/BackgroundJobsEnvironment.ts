@@ -9,7 +9,10 @@ export class BackgroundJobsEnvironment extends ServiceStackEnvironment {
   public getEnvironment(props: BackgroundJobsInputProps): IStringMap {
     return {
       ADDRESS: "::",
+
       DEBUG: "*:*",
+      REDIS_HOST: props.PersistenceStack.workerRedisCluster.getAtt('RedisEndpoint.Address').toString(),
+      REDIS_PORT: props.PersistenceStack.workerRedisCluster.port?.toString()
     } as IStringMap;
   }
 

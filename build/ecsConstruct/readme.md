@@ -1,0 +1,2 @@
+Lessons from this: 
+    - while using L1 constructs, if you want to hold references to their attributes later (e.g. your redis.hostName) then you need to get the props as expected like props.PersistenceStack.workerRedisCluster.getAtt('RedisEndpoint.Address') but also if you mess up and try to get the wrong props (Redis has a different prop for "address" depending on whether or not its a cluster) then that error may occur silently (in non-verbose mode) during the step that creates the stack + resource with the prop, not the stack or resource that consumes the prop

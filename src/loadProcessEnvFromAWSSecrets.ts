@@ -4,7 +4,7 @@
 import AWS from 'aws-sdk'
 
 export const loadProcessEnvFromAWSSecrets = async () => {
-    if(['development'].includes(String(process.env.NODE_ENV))){
+    if(['development', 'qa'].includes(String(process.env.NODE_ENV).toLowerCase())){
         console.log(`Skipping environment variable set - environment is ${process.env.NODE_ENV}`)
         return 
     }

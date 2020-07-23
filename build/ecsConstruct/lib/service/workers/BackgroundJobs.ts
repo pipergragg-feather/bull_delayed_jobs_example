@@ -8,8 +8,6 @@ import { FargateTaskDefinition } from '@aws-cdk/aws-ecs';
 import { ServiceStackInputProps } from '../../util/ServiceStack';
 import { DatadogEnvironment } from './DatadogEnvironment';
 
-const deployEnv = process.env.DEPLOY_ENV || "QA";
-
 export type BackgroundJobsInputProps = ServiceStackInputProps
 
 export class BackgroundJobs extends cdk.Stack {

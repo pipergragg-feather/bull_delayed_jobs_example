@@ -89,7 +89,7 @@ export class InfraStack extends StackBase {
 
     // ECS cluster (Fargate services)
     this.cluster = new ecs.Cluster(this, Variables.withSuffix("feather-cluster"), {
-      clusterName: "feather",
+      clusterName: Variables.withSuffix("feather"),
       vpc: this.vpc,
     });
 

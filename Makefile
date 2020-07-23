@@ -27,14 +27,16 @@ monitoring:
 deploy_eb:
 	EB_APPLICATION_NAME=worker EB_ENVIRONMENT=worker-$(environment) CIRCLE_BRANCH=feature/deploy CIRCLE_SHA1=$(shell git rev-parse HEAD) BRANCH=feature/deploy CIRCLE_TAG=$(environment) bash build/deploy_to_elasticbeanstalk.sh .
 
-# Later, could change the order of events to 
 # 1 Deploy infra stack
 # 2 Push image to ECR 
 # 3 Deploy ECR stack 
-# (Might wanna check this is what infra-rfc does)
 deploy_fargate:
-	$(MAKE) push_ecr && cd build/ecsConstruct && npm run cdk deploy \
-	&& cd ../..
+	cd build/ecsConstruct && \
+	npm run cdk deploy infra && \
+	cd ../.. &&\
+	$(MAKE) push_ecr && \
+	cd build/ecsConstruct && \
+	npm run cdk deploy worker-qa
 
 # Find accountId using $aws sts get-caller-identity 
 push_ecr:

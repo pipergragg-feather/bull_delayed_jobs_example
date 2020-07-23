@@ -4,8 +4,8 @@
 import AWS from 'aws-sdk'
 
 export const loadProcessEnvFromAWSSecrets = async () => {
-    if(process.env.NODE_ENV === 'development'){
-        console.log("Skipping environment variable set - environment is development")
+    if(['development'].includes(String(process.env.NODE_ENV))){
+        console.log(`Skipping environment variable set - environment is ${process.env.NODE_ENV}`)
         return 
     }
 
@@ -19,7 +19,10 @@ export const loadProcessEnvFromAWSSecrets = async () => {
     // We rethrow the exception by default.
 
     return new Promise((resolve, reject) => {
-        client.getSecretValue({SecretId: `worker-${String(process.env.NODE_ENV).toLowerCase()}-environment-variables`}, function(err, data) {
+        if(!process.env.SECRET_ID){
+            throw new Error("Expected process.env.SECRET_ID but found none")
+        }
+        client.getSecretValue({SecretId: String(process.env.SECRET_ID)}, function(err, data) {
         if(err){
             reject(err)
         }

@@ -65,7 +65,7 @@ export class BackgroundJobs extends StackBase {
     new ecs.FargateService(this, Variables.withSuffix("service-worker"), {
       cluster: props.InfraStack.cluster,
       desiredCount: 2,
-      securityGroup: props.InfraStack.apiSecurityGroup,
+      securityGroup: props.InfraStack.vpcSecurityGroup,
       taskDefinition,
       vpcSubnets: { subnets: props.InfraStack.vpc.privateSubnets }, 
     });

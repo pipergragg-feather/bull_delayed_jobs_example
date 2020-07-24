@@ -19,7 +19,7 @@
     "@types/redis": "^2.8.13",
     "@types/statsd-client": "^0.4.0",
     "aws-sdk": "^2.717.0",
-    "bull": "^3.10.0",
+    "bull": "^3.16.0",
     "cluster": "^0.7.7",
     "hot-shots": "^7.7.1",
     "newrelic": "^6.11.0",

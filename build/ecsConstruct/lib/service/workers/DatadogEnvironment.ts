@@ -3,12 +3,12 @@ import {
   IStringMap,
   ISecretMap,
 } from "../../util/ServiceStackEnvironment";
-import { BackgroundJobsInputProps } from "./BackgroundJobs";
+import { WorkerInputProps } from "./Worker";
+import { Variables } from '../../util/Variables';
 
 export class DatadogEnvironment extends ServiceStackEnvironment {
-  public getEnvironment(props: BackgroundJobsInputProps): IStringMap {
+  public getEnvironment(props: WorkerInputProps): IStringMap {
     return {
-      DD_API_KEY: "89f02f00ee72014ba8f878db4729c6e1",
       ECS_FARGATE: "true",
       DD_ENV: "qa",
       DD_DOGSTATSD_NON_LOCAL_TRAFFIC: "true",
@@ -18,13 +18,12 @@ export class DatadogEnvironment extends ServiceStackEnvironment {
     } as IStringMap;
   }
 
-  public getSecrets(props: BackgroundJobsInputProps): ISecretMap {
-    return {}
-    // return {
-    //   DD_API_KEY: this.secretFromSSMSecureStringParameter(
-    //     "feather.qa.worker.datadog_api_key",
-    //     1
-    //   ),
-    // };
+  public getSecrets(props: WorkerInputProps): ISecretMap {
+    return {
+      DD_API_KEY: this.secretFromSSMSecureStringParameter(
+        `feather.${Variables.environment()}.worker.datadog_api_key`,
+        1
+      ),
+    };
   }
 }

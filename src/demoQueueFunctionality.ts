@@ -7,7 +7,6 @@ import {ShortRunningJob, LongRunningJob, JobProcesser} from './processor'
 // Deployment
 // Monitoring 
 // Alerting 
-// Metrics (TICK stack?)
 
 // This module is intended to allow external-api and internal-api to: 
 // 1.) Schedule future operations (e.g. bill a customer once in the future)

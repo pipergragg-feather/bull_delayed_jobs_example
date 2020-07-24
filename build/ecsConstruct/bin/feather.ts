@@ -2,7 +2,7 @@
 import * as cdk from "@aws-cdk/core";
 import "source-map-support/register";
 import { InfraStack } from "../lib/core/InfraStack";
-import {BackgroundJobs, BackgroundJobsInputProps} from '../lib/service/workers/BackgroundJobs'
+import {Worker, WorkerInputProps} from '../lib/service/workers/Worker'
 import { Variables } from '../lib/util/Variables';
 import { PersistenceStack } from '../lib/core/PersistenceStack';
 
@@ -21,10 +21,10 @@ const persistenceStackInputProps = {
 const persistenceStack = new PersistenceStack(app, "persistence", persistenceStackInputProps)
 
 // Props to pass to services
-const workerStackInputProps: BackgroundJobsInputProps = {
+const workerStackInputProps: WorkerInputProps = {
   ...infraStack.getProps(),
   ...persistenceStack.getProps(),
   ...sharedStackProps
 };
 
-new BackgroundJobs(app, "worker", workerStackInputProps);
+new Worker(app, "worker", workerStackInputProps);

@@ -3,11 +3,11 @@ import {
   IStringMap,
   ISecretMap,
 } from "../../util/ServiceStackEnvironment";
-import { BackgroundJobsInputProps } from "./BackgroundJobs";
+import { WorkerInputProps } from "./Worker";
 import { Variables } from '../../util/Variables';
 
-export class BackgroundJobsEnvironment extends ServiceStackEnvironment {
-  public getEnvironment(props: BackgroundJobsInputProps): IStringMap {
+export class WorkerEnvironment extends ServiceStackEnvironment {
+  public getEnvironment(props: WorkerInputProps): IStringMap {
     return {
       ADDRESS: "::",
       NODE_ENV: Variables.environment(),
@@ -17,7 +17,7 @@ export class BackgroundJobsEnvironment extends ServiceStackEnvironment {
     } as IStringMap;
   }
 
-  public getSecrets(props: BackgroundJobsInputProps): ISecretMap {
+  public getSecrets(props: WorkerInputProps): ISecretMap {
    return {}
     // return {
     //   DD_API_KEY: this.secretFromSSMSecureStringParameter(

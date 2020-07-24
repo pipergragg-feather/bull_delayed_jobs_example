@@ -2,18 +2,18 @@ import * as cdk from '@aws-cdk/core';
 import * as ecs from "@aws-cdk/aws-ecs";
 import * as secrets from "@aws-cdk/aws-secretsmanager"
 
-import {BackgroundJobsEnvironment} from './BackgroundJobsEnvironment'
+import {WorkerEnvironment} from './WorkerEnvironment'
 import {Variables} from '../../util/Variables' 
 import { FargateTaskDefinition } from '@aws-cdk/aws-ecs';
 import { ServiceStackInputProps } from '../../util/ServiceStack';
 import { DatadogEnvironment } from './DatadogEnvironment';
 import { StackBase } from '../../util/StackBase';
 
-export type BackgroundJobsInputProps = ServiceStackInputProps
-export class BackgroundJobs extends StackBase {
+export type WorkerInputProps = ServiceStackInputProps
+export class Worker extends StackBase {
   // readonly secret: secrets.Secret
 
-  constructor(scope: cdk.Construct, id: string, props: BackgroundJobsInputProps) {
+  constructor(scope: cdk.Construct, id: string, props: WorkerInputProps) {
     super(scope, id, props);
 
     // ECS Task
@@ -41,7 +41,7 @@ export class BackgroundJobs extends StackBase {
     datadog.addPortMappings({containerPort: 8125, protocol: ecs.Protocol.TCP})
 
     // Environment variables for this stack
-    const env = new BackgroundJobsEnvironment(
+    const env = new WorkerEnvironment(
       this
     );
 

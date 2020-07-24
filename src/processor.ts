@@ -1,6 +1,8 @@
 import Queue from "bull";
-import { Logging, DataDog } from './middleware';
+import { Logging, Monitoring } from './middleware';
 import { Config } from './config';
+// import {StatsD} from 'hot-shots'
+
 
 
 // TODO 
@@ -51,7 +53,7 @@ export abstract class AsyncJob<T extends object> {
     console.log({jobName: this.jobName, props: this.props, queue: this.queue.name})
 
     let promise = this.execute(bullQueueJob.data)
-    for(const middleware of [new Logging(),  new DataDog()]){
+    for(const middleware of [new Logging(),  new Monitoring()]){
       promise = middleware.apply(this, promise)
     }
     await promise 
@@ -66,9 +68,7 @@ class SmallUseCase {
     var start = new Date().getTime();
     var end = start;
     const ms = Math.random() * 3000;
-    if(Math.random() > 0.5){
-      throw new Error('Did not work')
-    }
+
     while (end < start + ms) {
       end = new Date().getTime();
     }
@@ -78,7 +78,7 @@ class SmallUseCase {
 }
 
 export class ShortRunningJob extends AsyncJob<{myIdIs: string}> {
-  public jobName = 'shortRunningJob'
+  public jobName = 'whatIsMyIdJob'
   public props: {myIdIs: string}
   public queue = new AsyncQueue().default(this.jobName)
 
@@ -92,7 +92,7 @@ export class ShortRunningJob extends AsyncJob<{myIdIs: string}> {
   }
 }
 export class LongRunningJob extends AsyncJob<{myFavoritePizzaFlavor: string}> {
-  public jobName = 'longRunningJob'
+  public jobName = 'pizzaJob'
   public props: {myFavoritePizzaFlavor: string}
   public queue = new AsyncQueue().default(this.jobName)
 

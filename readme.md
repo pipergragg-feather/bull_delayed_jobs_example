@@ -1,7 +1,6 @@
 ## Bull Delayed Jobs Proof of Concept
 
 # TODO 
-- inject env variables on container start, including REDIS_HOST 
 - figure out which env variables should be private and confirm they are injected in the same way 
 - ensure datadog logging works in dev 
 - ensure datadog logging works in QA 

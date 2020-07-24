@@ -6,12 +6,14 @@ environment=qa
 local_tag=worker_$(environment)
 ecr_tag=$(aws_account_id).dkr.ecr.$(aws_region).amazonaws.com/worker-repo-$(environment)
 
+start:
+	export UID=$(shell id -u) && \
+	export GID=$(shell id -g) && \
+	export DD_API_KEY=89f02f00ee72014ba8f878db4729c6e1 && \
+	docker-compose up 
 
-diff:
-	cd build/ecsConstruct && \
-	tsc && \
-	cdk diff 
-
+tsc:
+	sudo rm -rf ./dist && tsc
 
 # 1 Deploy [infra, persistence] stacks
 # 2 Push image to ECR 

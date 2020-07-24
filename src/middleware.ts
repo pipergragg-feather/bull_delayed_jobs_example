@@ -1,6 +1,6 @@
 import {AsyncJob} from './processor'
 import { Config } from './config';
-import {StatsD} from 'hot-shots'
+import {StatsD, ClientOptions} from 'hot-shots'
 interface Middleware {
     apply<T extends AsyncJob<any>>(job: T, promise: Promise<void>): Promise<void>
 }
@@ -8,6 +8,7 @@ interface Middleware {
 export class Logging implements Middleware {
     public async apply<T extends AsyncJob<any>>(job: T, promise: Promise<void>): Promise<void> {
     console.log(`Applied Logging for ${job.jobName}: ${JSON.stringify(job.props)}`)
+    console.log(`STATSD_HOST: ${process.env['STATSD_HOST']}`)
     return new Promise(async (resolve) => {
         resolve(await promise
             .catch((err: Error) => {
@@ -15,37 +16,30 @@ export class Logging implements Middleware {
                 throw err 
             })
             .finally(() => {
-            console.log("Job logging done")
+                console.log("Job logging done")
             }))
     })
 }}
 
 
-export class DataDog implements Middleware {
-    
+export class Monitoring implements Middleware {
+    public static statsDConfig = (): ClientOptions => {
+        return {
+            host: Config.get(Config.EnvVar.STATSD_HOST), 
+            port: Number(Config.get(Config.EnvVar.STATSD_PORT)),
+            globalTags: ['worker'],
+        }}
 
     public async apply<T extends AsyncJob<any>>(job: T, promise: Promise<void>): Promise<void> {
-        if(Math.random() > -1){
-            return promise;
-        }
-        console.log("Datadog instrumentation middleware")
-        DataDog.statsD().increment(job.jobName)
+        console.log(Monitoring.statsDConfig())
+        new StatsD(Monitoring.statsDConfig()).increment(job.jobName)
+        new StatsD(Monitoring.statsDConfig()).increment('somethingIIncrement')
+        new StatsD(Monitoring.statsDConfig()).event(job.jobName, 'job middleware')
+        return promise 
+    }
 
-        DataDog.statsD().event(job.jobName, 'job middleware')
-        const promiseFn = () => promise
-        const timedPromise = DataDog.statsD().asyncTimer(promiseFn, job.jobName)
-        return new Promise(async (resolve) =>
-        {
-             await timedPromise
-             resolve()
-        })
+    private statsD(){
+        return new StatsD(Monitoring.statsDConfig())
     }
     
-    private static statsD() { 
-     return new StatsD(
-        {
-            host: Config.get(Config.EnvVar.STATSD_HOST), 
-            port: Number(Config.get(Config.EnvVar.STATSD_PORT))
-        }
-    )}
 }

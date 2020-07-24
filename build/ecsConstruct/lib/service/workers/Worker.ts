@@ -8,6 +8,7 @@ import { FargateTaskDefinition } from '@aws-cdk/aws-ecs';
 import { ServiceStackInputProps } from '../../util/ServiceStack';
 import { DatadogEnvironment } from './DatadogEnvironment';
 import { StackBase } from '../../util/StackBase';
+import { CfnOutput } from '@aws-cdk/core';
 
 export type WorkerInputProps = ServiceStackInputProps
 export class Worker extends StackBase {
@@ -17,6 +18,7 @@ export class Worker extends StackBase {
     super(scope, id, props);
 
     // ECS Task
+    // Fargate tasks require the awsvpc network mode.
     const taskDefinition = new FargateTaskDefinition(this, Variables.withSuffix("worker-task"), {
       cpu: 1024,
       memoryLimitMiB: 2048,
@@ -35,6 +37,7 @@ export class Worker extends StackBase {
       logging: new ecs.AwsLogDriver({ streamPrefix: Variables.withSuffix("ecs") }),
       memoryLimitMiB: 1024,
       secrets: datadogEnv.getSecrets(props),
+      
     });
 
     datadog.addPortMappings({containerPort: 8126, protocol: ecs.Protocol.TCP})
@@ -45,20 +48,14 @@ export class Worker extends StackBase {
       this
     );
 
-    const secretId = Variables.withSuffix("WorkerEnvSecrets")
-    new secrets.Secret(this, secretId)
-
     taskDefinition.addContainer(Variables.withSuffix('worker'), {
       cpu: 512,
-      environment: Object.assign(env.getEnvironment(props), {SECRET_ID: secretId, STATSD_HOST: 'datadog'}),
+      environment: Object.assign(env.getEnvironment(props), {STATSD_HOST: datadog.containerName}),
       essential: true,
       image: ecs.ContainerImage.fromEcrRepository(props.InfraStack.repository),
       logging: new ecs.AwsLogDriver({ streamPrefix: Variables.withSuffix("ecs") }),
       memoryLimitMiB: 2048,
     });
-
-    // Add link to datadog sidecar, aliasing it as 'datadog' so we can use the alias as 
-    // taskDefinition.defaultContainer?.addLink(datadog, 'datadog')
 
     // ECS Service
     new ecs.FargateService(this, Variables.withSuffix("service-worker"), {
@@ -71,13 +68,10 @@ export class Worker extends StackBase {
     });
     
 
-    // const namespace = new serviceDiscovery.PrivateDnsNamespace(taskDefinition, 'service-namespace', {vpc: props.InfraStack.vpc, name: Variables.withSuffix('worker')})
-
-
     // Outputs
-    // new CfnOutput(this, "ApiEndpoint", {
-    //   value: lb.loadBalancerDnsName,
-    // });
+    new CfnOutput(this, "DatadogContainerName", {
+      value: datadog.containerName,
+    });
 
   }
 }

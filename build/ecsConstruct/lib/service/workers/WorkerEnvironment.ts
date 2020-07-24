@@ -13,7 +13,7 @@ export class WorkerEnvironment extends ServiceStackEnvironment {
       NODE_ENV: Variables.environment(),
       DEBUG: "*:*",
       REDIS_HOST: props.PersistenceStack.workerRedisCluster.getAtt('RedisEndpoint.Address').toString(),
-      REDIS_PORT: props.PersistenceStack.workerRedisCluster.port?.toString()
+      REDIS_PORT: props.PersistenceStack.workerRedisCluster.port?.toString(),
     } as IStringMap;
   }
 

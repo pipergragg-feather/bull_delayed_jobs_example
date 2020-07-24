@@ -19,7 +19,7 @@ import {ShortRunningJob, LongRunningJob, JobProcesser} from './processor'
 const beginProcess = () => {
   console.log("Beginning processing!")
   if (cluster.isMaster) {
-    for (var i = 0; i < 1000; i++) {
+    for (var i = 0; i < 10; i++) {
       console.log(`Scheduling jobs at index ${i}`)
       new ShortRunningJob().schedule()
       new LongRunningJob().schedule()

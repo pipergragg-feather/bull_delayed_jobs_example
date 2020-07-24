@@ -1,6 +1,7 @@
 version: "3.8"
 services:
   worker:
+    user: $UID:$GID
     container_name: worker
     build:
       context: .
@@ -9,27 +10,40 @@ services:
       - .:/usr/src/app
     environment:
       - REDIS_HOST=redis_db
+      - STATSD_HOST=agent
+      - STATSD_PORT=8125
       - NODE_ENV=development 
     links: 
-      - redis_db
-      - datadog
+      - redis_db:redis 
+      - datadog:agent
+      
   datadog:
     image: datadog/agent:latest
+    links:
+      - redis_db:redis 
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - /proc/:/host/proc/:ro
       - /sys/fs/cgroup/:/host/sys/fs/cgroup:ro
     ports:
         - 8125:8125/udp
+        - 8126:8126
     environment:
-      - DD_API_KEY=89f02f00ee72014ba8f878db4729c6e1
+      - DD_API_KEY=${DD_API_KEY}
       - DD_ENV=development
       - DD_DOGSTATSD_NON_LOCAL_TRAFFIC=true
       - DD_SERVICE=worker
       - DD_VERSION=1
+      - DD_APM_ENABLED=true
 
   redis_db:
+    user: $UID:$GID
     image: redis:5.0.6
     container_name: worker_redis
     ports: 
       - 6379:6379
+
+
+# networks:
+#   default:
+#     driver: bridge

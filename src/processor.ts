@@ -37,6 +37,9 @@ export abstract class AsyncJob<T extends object> {
   public abstract queue: Queue.Queue
 
   public async schedule(){
+    if(process.env.NODE_ENV === 'development' && process.env.SYNC_ONLY === 'true'){
+      return await this.execute(this.props)
+    }
     await this.queue.add(this.jobName, this.props)
   }
   public async beginProcessingFromQueue(){
@@ -63,6 +66,9 @@ class SmallUseCase {
     var start = new Date().getTime();
     var end = start;
     const ms = Math.random() * 3000;
+    if(Math.random() > 0.5){
+      throw new Error('Did not work')
+    }
     while (end < start + ms) {
       end = new Date().getTime();
     }

@@ -10,10 +10,11 @@ export class DatadogEnvironment extends ServiceStackEnvironment {
     return {
       DD_API_KEY: "89f02f00ee72014ba8f878db4729c6e1",
       ECS_FARGATE: "true",
-      DD_ENV: "development",
+      DD_ENV: "qa",
       DD_DOGSTATSD_NON_LOCAL_TRAFFIC: "true",
       DD_SERVICE: "worker",
-      DD_VERSION: "7"
+      DD_VERSION: "1",
+      DD_TAGS: 'fargate_qa sidecar_qa'
     } as IStringMap;
   }
 

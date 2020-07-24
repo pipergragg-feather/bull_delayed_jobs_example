@@ -28,7 +28,7 @@ export class PersistenceStack extends StackBase {
             {
               subnetIds: props.InfraStack.vpc.privateSubnets.map((s) => s.subnetId), 
               description: 'Subnet group for redis',
-              cacheSubnetGroupName: "private-subnets-for-redis"
+              cacheSubnetGroupName: "private-subnets-for-redis",
             }
         )
         

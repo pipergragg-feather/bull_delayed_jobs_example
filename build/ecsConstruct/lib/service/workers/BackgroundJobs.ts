@@ -50,16 +50,15 @@ export class BackgroundJobs extends StackBase {
 
     taskDefinition.addContainer(Variables.withSuffix('worker'), {
       cpu: 512,
-      environment: Object.assign(env.getEnvironment(props), {SECRET_ID: secretId}),
+      environment: Object.assign(env.getEnvironment(props), {SECRET_ID: secretId, STATSD_HOST: 'datadog'}),
       essential: true,
       image: ecs.ContainerImage.fromEcrRepository(props.InfraStack.repository),
       logging: new ecs.AwsLogDriver({ streamPrefix: Variables.withSuffix("ecs") }),
       memoryLimitMiB: 2048,
-      // secrets: env.getSecrets(props),
     });
 
-
-    // taskDefinition.defaultContainer?.addLink(datadog)
+    // Add link to datadog sidecar, aliasing it as 'datadog' so we can use the alias as 
+    // taskDefinition.defaultContainer?.addLink(datadog, 'datadog')
 
     // ECS Service
     new ecs.FargateService(this, Variables.withSuffix("service-worker"), {
@@ -68,6 +67,7 @@ export class BackgroundJobs extends StackBase {
       securityGroup: props.InfraStack.vpcSecurityGroup,
       taskDefinition,
       vpcSubnets: { subnets: props.InfraStack.vpc.privateSubnets }, 
+      
     });
     
 

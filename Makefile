@@ -6,18 +6,25 @@ environment=qa
 local_tag=worker_$(environment)
 ecr_tag=$(aws_account_id).dkr.ecr.$(aws_region).amazonaws.com/worker-repo-$(environment)
 
-# 1 Deploy infra stack
+
+diff:
+	cd build/ecsConstruct && \
+	tsc && \
+	cdk diff 
+
+
+# 1 Deploy [infra, persistence] stacks
 # 2 Push image to ECR 
-# 3 Deploy ECR stack 
+# 3 Deploy [worker] stack 
 deploy:
 	cd build/ecsConstruct && \
 	tsc && \
-	npm run cdk deploy infra && \
-	npm run cdk deploy persistence && \
+	cdk deploy infra && \
+	cdk deploy persistence && \
 	cd ../.. &&\
 	$(MAKE) push && \
 	cd build/ecsConstruct && \
-	npm run cdk deploy worker
+	cdk deploy worker
 
 destroy:
 	cd build/ecsConstruct && \
@@ -26,7 +33,7 @@ destroy:
 	cd ../.. 
 
 taskforce:
-	npx taskforce -n "transcoder connection" -t eb6d571c-1a0e-496f-9162-d0acfc170eb1
+	npx taskforce -n "transcoder connection" -t bfccdd4c-3052-4e38-9e66-5ad99f288d75
 
 
 # Find accountId using $aws sts get-caller-identity 

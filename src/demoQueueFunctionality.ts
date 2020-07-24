@@ -1,4 +1,4 @@
-// import cluster from "cluster";
+import cluster from "cluster";
 import {ShortRunningJob, LongRunningJob, JobProcesser} from './processor'
 // import {loadProcessEnvFromAWSSecrets} from './loadProcessEnvFromAWSSecrets'
 
@@ -19,28 +19,28 @@ import {ShortRunningJob, LongRunningJob, JobProcesser} from './processor'
 
 const beginProcess = () => {
   console.log("Beginning processing!")
-  // if (cluster.isMaster) {
+  if (cluster.isMaster) {
     for (var i = 0; i < 1000; i++) {
       console.log(`Scheduling jobs at index ${i}`)
       new ShortRunningJob().schedule()
       new LongRunningJob().schedule()
     }
-    // for (var i = 0; i < 4; i++) {
-    //   cluster.fork();
-    // }
+    for (var i = 0; i < 4; i++) {
+      cluster.fork();
+    }
     new JobProcesser().process()
-    // cluster.on("online", function(worker) {
-    //   // Lets create a few jobs for every created worker
-    //   console.log('Worker ' + worker.process.pid + ' online.')
+    cluster.on("online", function(worker) {
+      // Lets create a few jobs for every created worker
+      console.log('Worker ' + worker.process.pid + ' online.')
       
-    // })
-    // cluster.on("exit", function(worker, code, signal) {
-    //   console.log("worker " + worker.process.pid + " died");
-    // });
-  // }
-  // if (cluster.isWorker) {
-  //   new JobProcesser().process()
-  // }
+    })
+    cluster.on("exit", function(worker, code, signal) {
+      console.log("worker " + worker.process.pid + " died");
+    });
+  }
+  if (cluster.isWorker) {
+    new JobProcesser().process()
+  }
 }
 
 if (!module.parent) {

@@ -41,7 +41,7 @@ export class Worker extends StackBase {
     });
 
     datadog.addPortMappings({containerPort: 8126, protocol: ecs.Protocol.TCP})
-    datadog.addPortMappings({containerPort: 8125, protocol: ecs.Protocol.TCP})
+    datadog.addPortMappings({containerPort: 8125, protocol: ecs.Protocol.UDP})
 
     // Environment variables for this stack
     const env = new WorkerEnvironment(
@@ -50,7 +50,7 @@ export class Worker extends StackBase {
 
     taskDefinition.addContainer(Variables.withSuffix('worker'), {
       cpu: 512,
-      environment: Object.assign(env.getEnvironment(props), {STATSD_HOST: datadog.containerName}),
+      environment: Object.assign(env.getEnvironment(props), {STATSD_HOST: '127.0.0.1', STATSD_PORT: '8125'}),
       essential: true,
       image: ecs.ContainerImage.fromEcrRepository(props.InfraStack.repository),
       logging: new ecs.AwsLogDriver({ streamPrefix: Variables.withSuffix("ecs") }),

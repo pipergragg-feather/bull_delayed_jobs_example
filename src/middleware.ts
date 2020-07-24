@@ -27,18 +27,26 @@ export class Monitoring implements Middleware {
         return {
             host: Config.get(Config.EnvVar.STATSD_HOST), 
             port: Number(Config.get(Config.EnvVar.STATSD_PORT)),
-            globalTags: ['worker'],
+            globalTags: ['worker', String(process.env.NODE_ENV)],
         }}
 
     public async apply<T extends AsyncJob<any>>(job: T, promise: Promise<void>): Promise<void> {
         console.log(Monitoring.statsDConfig())
-        new StatsD(Monitoring.statsDConfig()).increment(job.jobName)
-        new StatsD(Monitoring.statsDConfig()).increment('somethingIIncrement')
-        new StatsD(Monitoring.statsDConfig()).event(job.jobName, 'job middleware')
-        return promise 
+        this.statsD.increment(job.jobName)
+        this.statsD.event(job.jobName, 'job began', {alert_type: 'info'})
+        return new Promise((resolve) => {
+            resolve(promise
+            .then(() => {
+                this.statsD.event(job.jobName, 'job success', {alert_type: 'success'})
+            })
+            .catch((err) => {
+                this.statsD.event(job.jobName, 'job failed', {alert_type: 'error'})
+                throw err
+            }))
+        })
     }
 
-    private statsD(){
+    private get statsD(){
         return new StatsD(Monitoring.statsDConfig())
     }
     

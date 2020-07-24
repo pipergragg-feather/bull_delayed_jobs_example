@@ -15,6 +15,12 @@ start:
 tsc:
 	sudo rm -rf ./dist && tsc
 
+diff:
+	cd build/ecsConstruct && \
+	tsc && \
+	cdk diff
+
+
 # 1 Deploy [infra, persistence] stacks
 # 2 Push image to ECR 
 # 3 Deploy [worker] stack 

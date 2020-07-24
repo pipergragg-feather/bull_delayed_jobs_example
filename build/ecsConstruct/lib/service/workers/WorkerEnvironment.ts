@@ -4,13 +4,13 @@ import {
   ISecretMap,
 } from "../../util/ServiceStackEnvironment";
 import { WorkerInputProps } from "./Worker";
-import { Variables } from '../../util/Variables';
+// import { Variables } from '../../util/Variables';
 
 export class WorkerEnvironment extends ServiceStackEnvironment {
   public getEnvironment(props: WorkerInputProps): IStringMap {
     return {
       ADDRESS: "::",
-      NODE_ENV: Variables.environment(),
+      NODE_ENV: 'qa',
       DEBUG: "*:*",
       REDIS_HOST: props.PersistenceStack.workerRedisCluster.getAtt('RedisEndpoint.Address').toString(),
       REDIS_PORT: props.PersistenceStack.workerRedisCluster.port?.toString(),

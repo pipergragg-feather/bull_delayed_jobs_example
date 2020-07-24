@@ -99,6 +99,9 @@ export class LongRunningJob extends AsyncJob<{myFavoritePizzaFlavor: string}> {
   constructor(){
     super()
     const randNumber =  Math.floor((Math.random()*1000)) % 2
+    if(randNumber === 1){
+      throw new Error("Error: Pepperoni detected - please select pineapple instead")
+    }
     this.props = {myFavoritePizzaFlavor: ['pineapple', 'pepperoni'][randNumber]}
   }
 

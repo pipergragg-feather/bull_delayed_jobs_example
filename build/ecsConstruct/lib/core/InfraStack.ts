@@ -27,7 +27,6 @@ export interface IInfraStackProps extends StackProps {
     rdsSecurityGroup: ISecurityGroup;
     vpc: ec2.Vpc;
     vpcSecurityGroup: ISecurityGroup;
-    vpcSecurityGroupName: string;
   };
 
 }
@@ -58,9 +57,6 @@ export class InfraStack extends StackBase {
   @prop
   public readonly vpcSecurityGroup: ISecurityGroup;
 
-  @prop 
-  public readonly vpcSecurityGroupName: string;
-
 
   constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
@@ -90,12 +86,11 @@ export class InfraStack extends StackBase {
     });
 
     // https://github.com/Netflix/asgard/issues/336
-    this.vpcSecurityGroupName = Variables.withSuffix("feather-sg-vpc")
     // Security group granting access between VPC resources
     this.vpcSecurityGroup = new SecurityGroup(this, Variables.withSuffix("feather-sg-vpc"), {
       allowAllOutbound: true,
       vpc: this.vpc,
-      securityGroupName: this.vpcSecurityGroupName
+      securityGroupName: Variables.withSuffix("feather-sg-vpc")
     });
 
     this.vpcSecurityGroup.addIngressRule(

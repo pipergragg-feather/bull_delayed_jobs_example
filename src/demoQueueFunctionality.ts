@@ -19,13 +19,14 @@ import {loadProcessEnvFromAWSSecrets} from './loadProcessEnvFromAWSSecrets'
 
 const beginProcess = () => {
   if (cluster.isMaster) {
-    for (var i = 0; i < 2; i++) {
+    for (var i = 0; i < 1000; i++) {
       new ShortRunningJob().schedule()
       new LongRunningJob().schedule()
     }
-    for (var i = 0; i < 4; i++) {
-      cluster.fork();
-    }
+    // for (var i = 0; i < 4; i++) {
+    //   cluster.fork();
+    // }
+    new JobProcesser().process()
     cluster.on("online", function(worker) {
       // Lets create a few jobs for every created worker
       console.log('Worker ' + worker.process.pid + ' online.')

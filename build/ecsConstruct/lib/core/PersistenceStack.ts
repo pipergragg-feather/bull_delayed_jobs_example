@@ -31,9 +31,7 @@ export class PersistenceStack extends StackBase {
               cacheSubnetGroupName: "private-subnets-for-redis"
             }
         )
-          
-
-    console.log({vpcsecGroupId: props.InfraStack.vpcSecurityGroup.securityGroupId})
+        
     // When working with cloudFormation resources,
     // we use .ref instead of assigning directly.
     // [AZMode, CacheSubnetGroupName, SecurityGroupIds, PreferredAvailabilityZones, SnapshotArns, SnapshotRetentio
